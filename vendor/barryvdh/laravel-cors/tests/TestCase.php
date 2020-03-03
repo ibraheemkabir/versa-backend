@@ -65,7 +65,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
             }
         ]);
 
-        $router->('web/validation', [
+        $router->post('web/validation', [
             'uses' => function (\Illuminate\Http\Request $request) {
                 $this->validate($request, [
                     'name' => 'required',
