@@ -645,6 +645,28 @@ class UserService extends SmsService
      * @param $request
      * @return \Illuminate\Http\JsonResponse
      */
+    public function adminUpdatePreference($request)
+    {
+        $currentUser = Auth::user();
+
+        $requestData = [
+            'updates_on_new_plans' => $request['updates_on_new_plans'],
+            'email_updates_on_investment_process' => $request['email_updates_on_investment_process']
+        ];
+
+        $pref = $this->userRepository->updateById($request['id'], $requestData);
+
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'Preference was successfully updated';
+        $success['Data'] = $pref;
+
+        return response()->json(['success' => $success], 200);
+    }
+
+    /**
+     * @param $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updateAccountDetail($request)
     {
         $currentUser = Auth::user();
@@ -674,6 +696,54 @@ class UserService extends SmsService
         $success['Data'] = $acc;
 
         return response()->json(['success' => $success], 200);
+    }
+
+    /**
+     * @param $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function adminUpdateAccountDetail($request)
+    {
+        $authData = Auth::user();
+
+        if(($authData['user_category'] != "Admin") && ($authData['user_category'] != "SuperAdmin"))
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to update this user data.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+
+        }else{
+        $currentUser = Auth::user();
+
+        $requestData = [
+            'account_name' => $request['account_name'],
+            'account_number' => $request['account_number'],
+            'bank_name' => $request['bank_name'],
+            'bank_code' => $request['bank_code']
+        ];
+
+        $acc = $this->userRepository->updateById($request['id'], $requestData);
+
+        $mailData = [
+            'name' => $request['first_name'],
+            'email' => $request['email'],
+            'subject' => 'Account details update',
+            'mailTo' => $request['email'],
+            'view' => 'account_update_success',
+            'webpage' => getenv('WEBPAGE'),
+        ];
+
+        $this->sendMail($mailData);
+
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'Account Detail was successfully updated';
+        $success['Data'] = $acc;
+
+        return response()->json(['success' => $success], 200);
+        }
     }
 
     /**
@@ -790,6 +860,50 @@ class UserService extends SmsService
                 $error = [
                     'StatusCode' => 401,
                     'Message' => 'User does not exist.'
+                ];
+
+                return response()->json(['error' => $error], 401);
+            }
+        }
+    }
+
+    /**
+     * @param $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
+     */
+    public function adminUserdelete($request)
+    {
+        $user = Auth::user();
+        if(($user['user_category'] != "Admin") && ($user['user_category'] != "SuperAdmin"))
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to delete this user.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+        else
+        {
+            
+            $userData = $this->userRepository->where('email', $request['email'])->get();
+
+            if(count($userData) > 0)
+            {
+                $id = $userData[0]['id'];
+                $result = $this->userRepository->deleteById($id);
+
+                $success['StatusCode'] = 200;
+                $success['Message'] = 'User was successfully deleted';
+
+                return response()->json(['success' => $success], 200);
+            }
+            else
+            {
+                $error = [
+                    'StatusCode' => 401,
+                    'Message' => 'An error occured deleting this user'
                 ];
 
                 return response()->json(['error' => $error], 401);

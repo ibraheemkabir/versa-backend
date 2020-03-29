@@ -54,8 +54,11 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('update_preference', 'UserController@updatePreference');
     Route::post('update_account_detail', 'UserController@updateAccountDetail');
     Route::post('admin/update_user', 'UserController@adminUpdateUser');
+    Route::post('admin/update_account_detail', 'UserController@adminUpdateAccountDetail');
+    Route::post('admin/update_preference', 'UserController@adminUpdatePreference');
     Route::post('fetch_profile', 'UserController@fetchProfile');
     Route::post('user/list', 'UserController@list');
+    Route::post('user/delete', 'UserController@adminUserdelete');
     Route::post('user/validate_otp', 'UserController@validateOTP');
 
     // Category
