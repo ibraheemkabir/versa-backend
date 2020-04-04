@@ -9,13 +9,15 @@ use App\Repositories\ReportRepository;
 use App\Repositories\SubcategoryRepository;
 use App\Repositories\UserInvestmentRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\PoolGroupsRepository;
+use App\Repositories\InvestmentGroups;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class UserInvestmentService extends SmsService
 {
-    protected $userInvestmentRepository, $investmentRepository, $userRepository, $reportRepository;
+    protected $userInvestmentRepository,$PoolGroupsRepository, $investmentRepository, $userRepository, $reportRepository;
 
     /**
      * UserService constructor.
@@ -23,16 +25,19 @@ class UserInvestmentService extends SmsService
      * @param InvestmentRepository $investmentRepository
      * @param UserRepository $userRepository
      * @param ReportRepository $reportRepository
+     * @param PoolGroupsRepository $PoolGroupsRepository
      */
     public function __construct(UserInvestmentRepository $userInvestmentRepository,
                                 InvestmentRepository $investmentRepository,
                                 UserRepository $userRepository,
-                                ReportRepository $reportRepository)
+                                ReportRepository $reportRepository,
+                                PoolGroupsRepository $PoolGroupsRepository)
     {
         $this->userInvestmentRepository = $userInvestmentRepository;
         $this->investmentRepository = $investmentRepository;
         $this->userRepository = $userRepository;
         $this->reportRepository = $reportRepository;
+        $this->PoolGroupsRepository = $PoolGroupsRepository;
     }
 
     /**
@@ -166,6 +171,8 @@ class UserInvestmentService extends SmsService
         return response()->json(['success' => $success], 200);
     }
 
+   
+
     /**
      * @param $request
      * @return \Illuminate\Http\JsonResponse
@@ -230,6 +237,9 @@ class UserInvestmentService extends SmsService
 
         $this->sendMail($mailData);
 
+        $timestamp = now();
+
+        $this->reportRepository ->track_user_activity($authData['email'],$userData[0]['first_name'].' was added to investment '.$request['investment_id'],$timestamp);
 
         $success['StatusCode'] = 200;
         $success['Message'] = 'Investment pool was successful';

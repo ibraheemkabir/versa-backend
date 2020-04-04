@@ -7,17 +7,19 @@ use App\Repositories\InvestmentRepository;
 use App\Repositories\OtpRepository;
 use App\Repositories\UserInvestmentRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\ReportRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class UserService extends SmsService
 {
-    protected $authenticationRepository, $userRepository, $userInvestmentRepository, $investmentRepository, $otpService,
+    protected $authenticationRepository,$reportRepository, $userRepository, $userInvestmentRepository, $investmentRepository, $otpService,
                 $otpRepository;
 
     /**
      * UserService constructor.
+     * @param ReportRepository $reportRepository
      * @param UserRepository $userRepository
      * @param UserInvestmentRepository $userInvestmentRepository
      * @param InvestmentRepository $investmentRepository
@@ -28,6 +30,7 @@ class UserService extends SmsService
                                 UserInvestmentRepository $userInvestmentRepository,
                                 InvestmentRepository $investmentRepository,
                                 OtpService $otpService,
+                                ReportRepository $reportRepository,
                                 OtpRepository $otpRepository)
     {
         $this->userRepository = $userRepository;
@@ -35,6 +38,7 @@ class UserService extends SmsService
         $this->investmentRepository = $investmentRepository;
         $this->otpService = $otpService;
         $this->otpRepository = $otpRepository;
+        $this->reportRepository = $reportRepository;
     }
 
     public function list()
@@ -286,7 +290,9 @@ class UserService extends SmsService
             ];
 
             $this->userRepository->updateById($data['id'], $userData);
+            $timestamp = now();
 
+            $this->userRepository->track_user_activity($authData['email'],$authData['name'].' updated '.$data['first_name'].'`s profile',$timestamp);
             $success['StatusCode'] = 200;
             $success['Message'] = 'Data successfully updated';
 
@@ -654,8 +660,10 @@ class UserService extends SmsService
             'email_updates_on_investment_process' => $request['email_updates_on_investment_process']
         ];
 
-        $pref = $this->userRepository->updateById($request['id'], $requestData);
-
+        $pref = $this->userRepository->updateById($request['user_id'], $requestData);
+        $user = $this->userRepository->getById($request['user_id']);
+        $timestamp = now();
+        $this->reportRepository ->track_user_activity($authData['email'],$authData['name'].' updated '.$user['first_name'].' preferences',$timestamp);
         $success['StatusCode'] = 200;
         $success['Message'] = 'Preference was successfully updated';
         $success['Data'] = $pref;
@@ -725,7 +733,7 @@ class UserService extends SmsService
             'bank_code' => $request['bank_code']
         ];
 
-        $acc = $this->userRepository->updateById($request['id'], $requestData);
+        $acc = $this->userRepository->updateById($request['user_id'], $requestData);
 
         $mailData = [
             'name' => $request['first_name'],
@@ -736,12 +744,16 @@ class UserService extends SmsService
             'webpage' => getenv('WEBPAGE'),
         ];
 
+        $user = $this->userRepository->getById($request['user_id']);
+        
         $this->sendMail($mailData);
 
         $success['StatusCode'] = 200;
         $success['Message'] = 'Account Detail was successfully updated';
         $success['Data'] = $acc;
+        $timestamp = now();
 
+        $this->reportRepository->track_user_activity($authData['email'],$authData['first_name'].' updated '.$acc['first_name'].'`s profile ',$timestamp);
         return response()->json(['success' => $success], 200);
         }
     }
@@ -852,7 +864,8 @@ class UserService extends SmsService
                     'Message' => 'User account successfully deactivated',
                     'Data' => $result
                 ];
-
+                $timestamp = now();
+                $this->reportRepository ->track_user_activity($authData['email'],' deactivated '.${$userData[0]['first_name']}.'`s account',$timestamp);
                 return response()->json(['success' => $success], 200);
             }
             else
@@ -896,6 +909,8 @@ class UserService extends SmsService
 
                 $success['StatusCode'] = 200;
                 $success['Message'] = 'User was successfully deleted';
+                $timestamp = now();
+                $this->reportRepository ->track_user_activity($authData['email'],' deleted '.$userData[0]['first_name'].'`s account',$timestamp);
 
                 return response()->json(['success' => $success], 200);
             }

@@ -1,18 +1,21 @@
 <?php
 
 namespace App\Services;
+use Illuminate\Support\Facades\DB;
 
 use App\Repositories\CategoryRepository;
 use App\Repositories\InvestmentRepository;
 use App\Repositories\ReportRepository;
 use App\Repositories\UserInvestmentRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\PoolGroupsRepository;
+use App\Repositories\InvestmentGroupsRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class InvestmentService extends SmsService
 {
-    protected $investmentRepository, $userInvestmentRepository, $userRepository, $reportRepository, $reportService, $categoryRepository;
+    protected $investmentRepository,$poolGroupsRepository,$investmentGroupsRepository,$userInvestmentRepository, $userRepository, $reportRepository, $reportService, $categoryRepository;
 
     /**
      * UserService constructor.
@@ -22,13 +25,17 @@ class InvestmentService extends SmsService
      * @param ReportRepository $reportRepository
      * @param ReportService $reportService
      * @param CategoryRepository $categoryRepository
+     * @param PoolGroupsRepository $poolGroupsRepository
+     * @param InvestmentGroupsRepository $investmentGroupsRepository
      */
     public function __construct(InvestmentRepository $investmentRepository,
                                 UserInvestmentRepository $userInvestmentRepository,
                                 UserRepository $userRepository,
                                 ReportRepository $reportRepository,
                                 ReportService $reportService,
-                                CategoryRepository $categoryRepository)
+                                CategoryRepository $categoryRepository,
+                                PoolGroupsRepository $poolGroupsRepository,
+                                InvestmentGroupsRepository $investmentGroupsRepository)
     {
         $this->investmentRepository = $investmentRepository;
         $this->userInvestmentRepository = $userInvestmentRepository;
@@ -36,6 +43,8 @@ class InvestmentService extends SmsService
         $this->reportRepository = $reportRepository;
         $this->reportService = $reportService;
         $this->categoryRepository = $categoryRepository;
+        $this->poolGroupsRepository = $poolGroupsRepository;
+        $this->investmentGroupsRepository = $investmentGroupsRepository;
     }
 
     /**
@@ -438,6 +447,256 @@ class InvestmentService extends SmsService
         }
         else
         {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+
+    public function getPoolGroups($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+        $pool = $this->poolGroupsRepository->get();
+
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'pool groups successfully retrieved';
+        $success['Data'] =  $pool;
+        if($pool){
+            return response()->json(['success' => $success], 200);
+
+        }else
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'An error occured retrieving investment group'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+        }else{
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+
+    public function addPoolGroup($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+        
+        $data = $this->poolGroupsRepository->where('group_name', $request['group_name'])->get();
+            if(count($data)===0){
+                $pool = $this->poolGroupsRepository->addGroup($request['group_name']);
+                $success['StatusCode'] = 200;
+                $success['Message'] = 'pool group was successfully added';
+                $success['Data'] =  $pool;
+                if($pool === true){
+                    return response()->json(['success' => $success], 200);
+    
+                }else{
+                    $error = [
+                        'StatusCode' => 401,
+                        'Message' => 'An error occured adding investment group'
+                    ];
+                    return response()->json(['error' => $error], 401);
+                }
+            }else{
+                $success['StatusCode'] = 401;
+                $success['Message'] = 'investment group already exists';
+
+                return response()->json(['success' => $success], 401);
+            }
+           
+        }else{
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+
+    public function editPoolGroup($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+        $data = [
+            'group_name' => $request['group_name'],
+        ];
+
+        $pool = $this->poolGroupsRepository->updateById($request['group_id'], $data);
+
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'pool group was successfully updated';
+        $success['Data'] =  $pool;
+        if($pool){
+            return response()->json(['success' => $success], 200);
+
+        }else
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'An error occured editing investment group'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+        }else{
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+    
+    public function deletePoolGroup($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+        $data = [
+            'group_name' => $request['group_name'],
+        ];
+
+        $pool = $this->poolGroupsRepository->deleteById($request['group_id']);
+
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'pool group was successfully deleted';
+        $success['Data'] =  $pool;
+        if($pool === true){
+            return response()->json(['success' => $success], 200);
+
+        }else
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'An error occured deleting investment group'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+        }else{
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+
+    public function getInvestmentGroup($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+            
+            if($request['group_name']){
+                $pool = $this->investmentGroupsRepository->get_group($request['group_name']);
+            }else{
+                $pool = $this->investmentGroupsRepository->get_investment_group();
+            }
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'investment was successfully added to group';
+        $success['Data'] =  $pool;
+        if($pool){
+            return response()->json(['success' => $success], 200);
+
+        }else
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'An error occured adding investment group'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+        }else{
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+
+    public function addInvestmentToGroup($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+            $data = $this->investmentGroupsRepository->where('group_name', $request['group_name'])->where('investment_id', $request['investment_id'])->get();
+            if(count($data)===0){
+                $pool = $this->investmentGroupsRepository->addInvestment($request['group_name'],$request['investment_id']);
+
+                $success['StatusCode'] = 200;
+                $success['Message'] = 'investment was successfully added to group';
+                $success['Data'] =  $pool;
+                if($pool === true){
+                    return response()->json(['success' => $success], 200);
+
+                }else
+                {
+                    $error = [
+                        'StatusCode' => 401,
+                        'Message' => 'An error occured adding investment group'
+                    ];
+
+                    return response()->json(['error' => $error], 401);
+                }
+            }else{
+                $success['StatusCode'] = 401;
+                $success['Message'] = 'investment already belongs to that investment group';
+                return response()->json(['success' => $success], 401);
+            }
+        }else{
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'You are not authorized to perform this action.'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+    }
+
+    public function deleteInvestmentFromGroup($request)
+    {
+        $currentUser = Auth::user();
+        if(($currentUser['user_category'] == "Admin") || ($currentUser['user_category'] == "SuperAdmin"))
+        {
+        $pool = $this->investmentGroupsRepository->deleteById($request['id']);
+
+        $success['StatusCode'] = 200;
+        $success['Message'] = 'investment was successfully deleted from group';
+        $success['Data'] =  $pool;
+        if($pool === true){
+            return response()->json(['success' => $success], 200);
+
+        }else
+        {
+            $error = [
+                'StatusCode' => 401,
+                'Message' => 'An error occured deleting investment from group'
+            ];
+
+            return response()->json(['error' => $error], 401);
+        }
+        }else{
             $error = [
                 'StatusCode' => 401,
                 'Message' => 'You are not authorized to perform this action.'

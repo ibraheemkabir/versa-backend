@@ -82,6 +82,13 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('investment/endInvestment', 'InvestmentController@endInvestment');
     Route::post('investment/startInvestment', 'InvestmentController@startInvestment');
     Route::post('investment/investment_payout_user', 'InvestmentController@investmentPayoutUsers');
+    Route::post('investment/addGroup', 'InvestmentController@addGroup');
+    Route::post('investment/addToGroup','InvestmentController@addInvestmentToGroup');
+    Route::post('investment/deleteFromGroup','InvestmentController@deleteFromGroup');
+    Route::post('investment/getInvestmentGroup','InvestmentController@getInvestmentGroup');
+    Route::post('investment/getGroups','InvestmentController@getPoolGroups');
+    Route::post('investment/deleteGroup','InvestmentController@deletePoolGroup');
+    Route::post('investment/updateGroup','InvestmentController@editPoolGroup');
 
     // Investment User
     Route::post('investment_user/listInvestmentUser', 'UserInvestmentController@listInvestmentUser');

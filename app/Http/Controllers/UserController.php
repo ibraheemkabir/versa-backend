@@ -7,6 +7,9 @@ use App\Http\Requests\Users\CreateUserRequest;
 use App\Http\Requests\Users\LoginUserRequest;
 use App\Http\Requests\Users\ResetPasswordRequest;
 use App\Http\Requests\Users\UpdateAccountDetailRequest;
+use App\Http\Requests\Users\AdminUpdateAccountDetailRequest;
+use App\Http\Requests\Users\AdminUpdatePreferenceRequest;
+use App\Http\Requests\Users\AdminDeleteUserRequest;
 use App\Http\Requests\Users\UpdatePreferenceRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
 use App\Services\UserService;
@@ -119,6 +122,26 @@ class UserController extends Controller
         return $this->userService->updatePreference($request);
     }
 
+
+    /**
+     * @param AdminUpdatePreferenceRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function adminUpdatePreference(AdminUpdatePreferenceRequest $request)
+    {
+        return $this->userService->adminUpdatePreference($request);
+    }
+
+    
+    /**
+     * @param AdminUpdatePreferenceRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function adminUserdelete(adminDeleteUserRequest $request)
+    {
+        return $this->userService->adminUserdelete($request);
+    }
+
     /**
      * @param UpdateAccountDetailRequest $request
      * @return \Illuminate\Http\JsonResponse
@@ -126,6 +149,15 @@ class UserController extends Controller
     public function updateAccountDetail(UpdateAccountDetailRequest $request)
     {
         return $this->userService->updateAccountDetail($request);
+    }
+
+    /**
+     * @param AdminUpdateAccountDetailRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function adminUpdateAccountDetail(AdminUpdateAccountDetailRequest $request)
+    {
+        return $this->userService->adminUpdateAccountDetail($request);
     }
 
     /**

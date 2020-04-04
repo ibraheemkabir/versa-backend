@@ -208,6 +208,18 @@ class ReportService extends SmsService
         // List of career applications
         $career_application  = $this->reportRepository->fetch_career_applications();
 
+        //Total amount Invested
+        $total_investment  = $this->reportRepository->fetch_total_amount_invested();
+
+        //Users with Investment
+        $total_user_with_investment  = $this->reportRepository->fetch_users_with_investment();
+
+        //fetch users address
+        $fetch_users_address  = $this->reportRepository->fetch_users_address();
+
+        $fetch_investment_categories_count = $this->reportRepository->fetch_investment_categories_count();
+
+        
         $data = [
             'all_users' => $all_users->all_users,
             'unverified_users' => $unverified_users->unverified_users,
@@ -216,9 +228,13 @@ class ReportService extends SmsService
             'all_request' => $all_request->all_request,
             'pending_request' => $pending_request->pending_request,
             'career_application' => $career_application,
-            'request_application' => $request_application
+            'request_application' => $request_application,
+            'total_investment' => $total_investment,
+            'total_users_with_investment'=>$total_user_with_investment,
+            'fetch_users_address'=>$fetch_users_address,
+            'fetch_investment_categories_count'=>$fetch_investment_categories_count
         ];
-
+        
         $success['StatusCode'] = 200;
         $success['Message'] = 'Data was successfully fetched';
         $success['Data'] = $data;

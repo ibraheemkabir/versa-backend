@@ -52,6 +52,7 @@ class UserInvestmentController extends Controller
         return $this->userInvestmentService->create($createUserInvestmentRequest);
     }
 
+    
     /**
      * Display the specified resource.
      *
